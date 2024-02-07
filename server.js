@@ -1,24 +1,67 @@
 const express = require('express') // require(import) express from my node_modules folder
 const app = express() // invoke express
+const cors = require('cors')
+app.use(cors());
 const axios = require('axios');
 require('dotenv').config()
-const port = process.env.movie_PORT
-const apiKey = process.env.API_KEY_MOVIE
+
+const moveData = require('./MoveData/data.json') // import data
+const port = process.env.PORT
+const apiKey = process.env.API_KEY
+
+//_________________________________
 
 
+//_________________________________
 
-app.get('/search',moviesSearchHandler)
+app.get('/favorite',favoritePageHandler)
+
 app.get('/trending',moviesTrendingHandler)
+app.get('/search',moviesSearchHandler)
+
 app.get('/latestTV',latestTVHandler)
 app.get('/certification',moveCerificationHandler)
+
+
+ function favoritePageHandler(req,res){
+  res.send('Welcome to Favorite Page')
+  
+ }
+
+
+
+function moviesTrendingHandler(req,res){
+  let url = `https://api.themoviedb.org/3/trending/all/day?language=en-US&api_key=${apiKey}`
+  
+  axios.get(url)
+  .then( result => {
+    let movieData = result.data.results
+   
+    const moviesArray = movieData.map(movie => {
+      return  new Movie(movie.id,movie.title,movie.release_date,movie.poster_path,movie.overview)
+    })
+    res.json(moviesArray)
+    console.log(moviesArray)
+    
+  
+}
+  )
+  .catch(err => {
+    console.log(err)
+    res.status(500).send('Internal Server Error')
+  })
+
+ 
+}
 
 function moviesSearchHandler(req,res){
   let movieName = req.query
   let url = `https://api.themoviedb.org/3/search/movie?query=${movieName}&include_adult=false&language=en-US&page=1&api_key=${apiKey}`
   axios.get(url)
   .then(result => {
-    console.log(result)
-    res.json(result)
+    let movieData = result.data.results
+    console.log(movieData)
+    res.json(movieData)
   })
   .catch(err => {
     console.log(err)
@@ -27,28 +70,14 @@ function moviesSearchHandler(req,res){
   
 }
 
-function moviesTrendingHandler(req,res){
-  let url = `https://api.themoviedb.org/3/trending/all/day?language=en-US&api_key=${apiKey}`
-  axios.get(url)
-  .then(result => {
-    let movieMapArray = result.map(movie => {
-            return new Movie(movie.id,movie.title,movie.release_date,movie.poster_path,movie.overview)
-          })
-          console.log(movieMapArray)
-          res.json(movieMapArray)
-  })
-  .catch(err =>{
-    console.log(err)
-    res.status(500).send('Internal Server Error')
-  })
-}
 
 function latestTVHandler(req,res){
   let url = `https://api.themoviedb.org/3/tv/latest?api_key=${apiKey}`
   axios.get(url)
   .then(result => {
-    console.log(result)
-    res.json(result)
+    let movieData = result.data.results
+    console.log(movieData)
+    res.json(movieData)
   })
   .catch(err => {
     console.log(err)
@@ -61,7 +90,9 @@ function moveCerificationHandler(req,res){
   let url = `https://api.themoviedb.org/3/certification/movie/list?api_key=${apiKey}`
   axios.get(url)
   .then( result => {
-    console.log(result)
+    let movieData = result.data.results
+    res.json(movieData)
+    console.log(movieData)
   })
   .catch(err => {
     console.log(err)
