@@ -4,17 +4,64 @@ const cors = require('cors')
 app.use(cors());
 const axios = require('axios');
 require('dotenv').config()
+const moveData = require('./MoveData/data.json') // import data, this is from Lab11
 
-const moveData = require('./MoveData/data.json') // import data
-const port = process.env.PORT
+const port = process.env.PORT || 3000
 const apiKey = process.env.API_KEY
 
-//_________________________________
+//_____database setup__________
+const { Client } = require('pg')
+// url rules > postgres://username:password@localhost:5432/databasename
+const url = `postgres://anas:0000@localhost:5432/mydb` // my database url that I want to conect the server with.
+const client = new Client(url)
+
+const bodyParser = require('body-parser')
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json())
 
 
-//_________________________________
+//_____________ DataBase Routes ______________________
 
+app.post('/addMovie', addMovieHandler)
+app.get('/getMovies',getMovies)
+
+//________________ DataBase Handlers _________________
+function addMovieHandler(req, res) {
+  console.log(req.body)
+
+  const { title, time, date_of_release, overview, comment } = req.body
+  const sql = `INSERT INTO movie  (title, time, date_of_release, overview, comment)
+  VALUES ($1, $2, $3, $4, $5) RETURNING * ; ` // more secure approach
+  const values = [title, time, date_of_release, overview, comment]
+  client.query(sql,values).then((response)=>{
+     
+    res.status(201).send(response.rows)
+  }).catch(err => {
+    console.error(err);
+    res.status(500).send('Internal Server Error');
+  }) 
+}
+
+function getMovies(req,res){
+  const sql = 'SELECT * FROM movie;'
+  client.query(sql).then((response)=>{
+    const data =  response.rows
+    res.status(201).json(data)
+  }).catch(err => {
+    console.error(err);
+    res.status(500).send('Internal Server Error');
+  }) 
+}
+
+
+
+
+
+
+//________________ API Routes ________________________
+app.get('/',homePageHandler)
 app.get('/favorite',favoritePageHandler)
+
 
 app.get('/trending',moviesTrendingHandler)
 app.get('/search',moviesSearchHandler)
@@ -23,12 +70,15 @@ app.get('/latestTV',latestTVHandler)
 app.get('/certification',moveCerificationHandler)
 
 
- function favoritePageHandler(req,res){
+function favoritePageHandler(req, res) {
   res.send('Welcome to Favorite Page')
-  
+
+}
+
+function homePageHandler(req,res){
+  const requiredMove = new MoveFromMydb(moveData.title,moveData.poster_path,moveData.overview)
+  res.json(requiredMove)
  }
-
-
 
 function moviesTrendingHandler(req,res){
   let url = `https://api.themoviedb.org/3/trending/all/day?language=en-US&api_key=${apiKey}`
@@ -38,7 +88,7 @@ function moviesTrendingHandler(req,res){
     let movieData = result.data.results
    
     const moviesArray = movieData.map(movie => {
-      return  new Movie(movie.id,movie.title,movie.release_date,movie.poster_path,movie.overview)
+      return  new MovieFromApi(movie.id,movie.title,movie.release_date,movie.poster_path,movie.overview)
     })
     res.json(moviesArray)
     console.log(moviesArray)
@@ -54,8 +104,9 @@ function moviesTrendingHandler(req,res){
  
 }
 
+
 function moviesSearchHandler(req,res){
-  let movieName = req.query
+  let movieName = req.query.movieName
   let url = `https://api.themoviedb.org/3/search/movie?query=${movieName}&include_adult=false&language=en-US&page=1&api_key=${apiKey}`
   axios.get(url)
   .then(result => {
@@ -70,7 +121,6 @@ function moviesSearchHandler(req,res){
   
 }
 
-
 function latestTVHandler(req,res){
   let url = `https://api.themoviedb.org/3/tv/latest?api_key=${apiKey}`
   axios.get(url)
@@ -84,8 +134,6 @@ function latestTVHandler(req,res){
     res.status(500).send('Internal Server Error')
   })
 }
-
-
 function moveCerificationHandler(req,res){
   let url = `https://api.themoviedb.org/3/certification/movie/list?api_key=${apiKey}`
   axios.get(url)
@@ -101,7 +149,9 @@ function moveCerificationHandler(req,res){
 }
 
 
-function Movie(id,title,release_date,poster_path,overview){
+
+
+function MovieFromApi(id, title, release_date, poster_path, overview) {
   this.id = id
   this.title = title
   this.release_date = release_date
@@ -109,17 +159,26 @@ function Movie(id,title,release_date,poster_path,overview){
   this.overview = overview
 }
 
-app.use((req,res,next)=>{
+function MoveFromMydb(title,posterPath,overview){
+  this.title = title
+  this.posterPath = posterPath
+  this.overview = overview
+ }
+
+//_____________ API Handlers __________________________
+
+app.use((req, res, next) => {
   res.status(404).send('404 not found')
 })
-  
-app.use((err,req,res,next) => {
+
+app.use((err, req, res, next) => {
   console.error(err.stack)
   res.status(500).send('Internal Server Error')
 })
 
 
-
-app.listen(port, () => {
-  console.log(`movie app listening on port ${port}`)
-})
+client.connect().then(() => {
+  app.listen(port, () => {
+    console.log(`movie app listening on port ${port}`)
+  })
+}).catch()   // to make sure that the DB is connected to my server

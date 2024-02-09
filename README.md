@@ -23,4 +23,28 @@ this is going to be my firt website that I will build from scratch, in this proj
 this website will have a resposive pages and uptodate movie library where the user can navigate to differente section which includes (drama,romance,historic, scific...etc movies )
 also the user can add its favorate move to a list to watch them later.
 
+# Lab13:
+in this lab we add data base to our project, where we can get and post data from it.
+we also learn bunch of command to deal with the data base
+- sqlstop >> stop the DB
+- psql >> enter your default DB
+- \l >> list all my data base
+- \d >> to last my tables
+
+- CREATE DATABASE databasename ; >> to create data base
+- CREATE TABLE tablename (
+      column1 datatype,
+      column2 datatype,
+      column3 datatype,
+      ....... 
+)
+
+- psql -d mydb -f nameOfSchemaFile >> you have to be in the same directory that has the schemafile
+
+INSERT INTO table_name
+VALUES (value1, value2, value3, ...); >> provide the struct of the data table
+
+SELECT * FROM tableName >> to list the table data
+
+
 
