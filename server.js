@@ -6,7 +6,7 @@ const axios = require('axios');
 require('dotenv').config()
 const moveData = require('./MoveData/data.json') // import data, this is from Lab11
 
-const port = process.env.PORT || 3000
+const port = process.env.PORT 
 const apiKey = process.env.API_KEY
 
 //_____database setup__________
@@ -22,12 +22,28 @@ app.use(bodyParser.json())
 
 //_____________ DataBase Routes ______________________
 
-app.post('/addMovie', addMovieHandler)
 app.get('/getMovies',getMovies)
+app.post('/addMovie', addMovieHandler)
+
+
+app.put('/UPDATE/:id', updateMovieHandler)
+app.delete('/DELETE/:id',deleteMovieHandler)
+app.get('/getMovie/:id', getMovieByIdHandler);
 
 //________________ DataBase Handlers _________________
+function getMovies(req,res){
+  const sql = 'SELECT * FROM movie;'
+  client.query(sql).then((response)=>{
+    const data =  response.rows
+    res.status(200).json(data)
+  }).catch(err => {
+    console.error(err);
+    res.status(500).send('Internal Server Error');
+  }) 
+}
+
 function addMovieHandler(req, res) {
-  console.log(req.body)
+ 
 
   const { title, time, date_of_release, overview, comment } = req.body
   const sql = `INSERT INTO movie  (title, time, date_of_release, overview, comment)
@@ -42,19 +58,55 @@ function addMovieHandler(req, res) {
   }) 
 }
 
-function getMovies(req,res){
-  const sql = 'SELECT * FROM movie;'
-  client.query(sql).then((response)=>{
-    const data =  response.rows
-    res.status(201).json(data)
-  }).catch(err => {
-    console.error(err);
-    res.status(500).send('Internal Server Error');
-  }) 
+function updateMovieHandler(req,res){
+   
+  const dataId = req.params.id
+  const {title,time,date_of_release,overview,comment} = req.body
+  const sql = `UPDATE movie 
+  SET title=$1, time=$2, date_of_release=$3, overview=$4, comment=$5
+  WHERE  movie_id=$6`
+  const values = [title,time,date_of_release,overview,comment, dataId]
+  client.query(sql,values)
+  .then( respose => {
+    res.send('move data updated succefully')
+    
+  })
+  .catch(err => {
+    console.log(err)
+    res.status(500).send('internal service error')
+  })
 }
 
+function deleteMovieHandler(req,res){
 
+  const dataId = req.params.id 
+  const sql = `DELETE FROM movie
+  WHERE  movie_id=$1;`
+  
+  client.query(sql,[dataId])
+  .then( () => {
+    res.send('move data has been deleted')
+  })
+  .catch(err => {
+    console.log(err)
+    res.status(500).send('internal service error')
+  })
+}
 
+function getMovieByIdHandler(req,res){
+  const dataId = req.params.id
+  
+  const sql = `SELECT * FROM movie 
+  WHERE movie_id = $1;` 
+  client.query(sql,[dataId])
+  .then((response) => {
+    res.json(response.rows)
+  })
+  .catch(err => {
+    console.log(err)
+    res.status(500).send('internal service error')
+  })
+}
 
 
 
@@ -69,6 +121,9 @@ app.get('/search',moviesSearchHandler)
 app.get('/latestTV',latestTVHandler)
 app.get('/certification',moveCerificationHandler)
 
+
+
+//_____________ API Handlers __________________________
 
 function favoritePageHandler(req, res) {
   res.send('Welcome to Favorite Page')
@@ -165,7 +220,6 @@ function MoveFromMydb(title,posterPath,overview){
   this.overview = overview
  }
 
-//_____________ API Handlers __________________________
 
 app.use((req, res, next) => {
   res.status(404).send('404 not found')

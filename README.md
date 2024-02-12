@@ -46,5 +46,13 @@ VALUES (value1, value2, value3, ...); >> provide the struct of the data table
 
 SELECT * FROM tableName >> to list the table data
 
+# lab14
+
+- in this lab we continue working on our project by implementing two more new method which 
+are PUT and DELETE and complete the full cycle of our CRUD methods
+
+- also we use get method with id to retrive specific data from the database 
+
+- we learn addition sql statment i.e >> ALTER, DELETE, UPDATE ..etc
 
 
