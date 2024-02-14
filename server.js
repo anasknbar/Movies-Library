@@ -12,7 +12,8 @@ const apiKey = process.env.API_KEY
 //_____database setup__________
 const { Client } = require('pg')
 // url rules > postgres://username:password@localhost:5432/databasename
-const url = `postgres://anas:${process.env.dbPassword}@localhost:5432/mydb` // my database url that I want to conect the server with.
+//const url = `postgres://anas:${process.env.dbPassword}@localhost:5432/mydb` // my local database url that I want to conect the server with.
+const url = process.env.DbURL
 const client = new Client(url)
 
 const bodyParser = require('body-parser')
