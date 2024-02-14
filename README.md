@@ -55,4 +55,59 @@ are PUT and DELETE and complete the full cycle of our CRUD methods
 
 - we learn addition sql statment i.e >> ALTER, DELETE, UPDATE ..etc
 
+           
+# previous Labs requirments
+
+## lab 11 :
+- TA comment : please consider the following:
+The lab asked to handle "/" route and you didn't handle it
+
+      
+      app.get('/',homePageHandler) // line 115 
+      function homePageHandler(req,res){ //  134
+      const requiredMove = new MoveFromMydb(moveData.title,moveData.poster_path,moveData.overview)
+      res.json(requiredMove)
+      }
+
+
+## lab 12 :
+- TA comment : please consider the following:
+in (moviesSearchHandler) function line 59 you have to specify which param you want to use
+should be like this:
+let movieName = req.query.movieName;
+and the url would be:
+/search?movieName=spider 
+
+      let movieName = req.query.movieName // line 165
+
+
+## lab 14 : 
+- TA comment : please consider the following:
+the lab asked you to create a function that only updates the comment of a movie
+hint: you can do this using the Patch request
+
+      app.patch('/UPDATE/:id', updateMovieHandler) \\ line 29
+      function updateMovieHandler(req,res){ \\ line 61
+   
+      const dataId = req.params.id
+      const {title,time,date_of_release,overview,comment} = req.body
+      // const sql = `UPDATE movie 
+      // SET title=$1, time=$2, date_of_release=$3, overview=$4, comment=$5
+      // WHERE  movie_id=$6`
+      //const values = [title,time,date_of_release,overview,comment, dataId]
+      const sql = `UPDATE movie 
+      SET comment=$1
+      WHERE  movie_id=$2`
+      const values = [comment, dataId]
+      client.query(sql,values)
+      .then( respose => {
+      res.send('comment updated succefully')
+      
+      })
+      .catch(err => {
+      console.log(err)
+      res.status(500).send('internal service error')
+      })
+      }
+
 
