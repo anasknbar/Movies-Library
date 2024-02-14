@@ -12,7 +12,7 @@ const apiKey = process.env.API_KEY
 //_____database setup__________
 const { Client } = require('pg')
 // url rules > postgres://username:password@localhost:5432/databasename
-const url = `postgres://anas:0000@localhost:5432/mydb` // my database url that I want to conect the server with.
+const url = `postgres://anas:${process.env.dbPassword}@localhost:5432/mydb` // my database url that I want to conect the server with.
 const client = new Client(url)
 
 const bodyParser = require('body-parser')
@@ -26,7 +26,7 @@ app.get('/getMovies',getMovies)
 app.post('/addMovie', addMovieHandler)
 
 
-app.put('/UPDATE/:id', updateMovieHandler)
+app.patch('/UPDATE/:id', updateMovieHandler)
 app.delete('/DELETE/:id',deleteMovieHandler)
 app.get('/getMovie/:id', getMovieByIdHandler);
 
@@ -61,14 +61,15 @@ function addMovieHandler(req, res) {
 function updateMovieHandler(req,res){
    
   const dataId = req.params.id
-  const {title,time,date_of_release,overview,comment} = req.body
+  const {comment} = req.body
+
   const sql = `UPDATE movie 
-  SET title=$1, time=$2, date_of_release=$3, overview=$4, comment=$5
-  WHERE  movie_id=$6`
-  const values = [title,time,date_of_release,overview,comment, dataId]
+  SET comment=$1
+  WHERE  movie_id=$2`
+  const values = [comment, dataId]
   client.query(sql,values)
   .then( respose => {
-    res.send('move data updated succefully')
+    res.send('comment updated succefully')
     
   })
   .catch(err => {
